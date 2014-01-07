@@ -8,6 +8,7 @@ class Character
 
   def initialize(name='brian')
     @name = name
+    @base_damage = 1
     @alignment = 'neutral'
     @strength = 10
     @dexterity = 10
@@ -19,7 +20,10 @@ class Character
     @level = 1
     @max_hit_points = calculate_hit_points
     @current_hit_points = @max_hit_points
+    @default_armor_class = 10
     @armor_class = calculate_armor_class
+    @crit_modifier = 2
+    @attack_damage_modifier = 'strength'
   end
 
   def alignment=(alignment)
@@ -31,7 +35,7 @@ class Character
   end
 
   def attack(defender, roll, damage)
-    if defender.hit?(roll)
+    if defender.hit?(roll, self.class)
       defender.take_damage(damage)
       gain_experience
     end
@@ -41,8 +45,12 @@ class Character
     @current_hit_points -= damage
   end
 
-  def hit?(roll)
-    roll >= @armor_class
+  def hit?(roll, attacker_class)
+    if attacker_class == Rogue && get_modifier(@dexterity) > 0
+      roll >= @default_armor_class
+    else
+      roll >= @armor_class
+    end
   end
 
   def critical_hit?(roll)
@@ -68,18 +76,19 @@ class Character
   end
 
   def get_damage(roll)
-    damage = 1
+    modifier = instance_variable_get("@#{@attack_damage_modifier}".to_sym)
+    damage = @base_damage
     if critical_hit?(roll)
-      damage = (damage + (get_modifier(@strength) * 2)) * 2
+      damage = (damage + (get_modifier(modifier) * 2)) * @crit_modifier
     else
-      damage += get_modifier(@strength)
+      damage += get_modifier(modifier)
     end
 
     damage < 1 ? 1 : damage
   end
 
   def calculate_armor_class
-    10 + get_modifier(@dexterity)
+    @default_armor_class + get_modifier(@dexterity)
   end
 
   def calculate_hit_points

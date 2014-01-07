@@ -59,12 +59,12 @@ describe 'Character' do
   describe 'can attack' do
     it 'if roll beats armor class, it is a hit' do
       roll = character.armor_class
-      character.hit?(roll).should be_true
+      character.hit?(roll, character.class).should be_true
     end
 
     it 'if roll does not beat armor class, it is a miss' do
       roll = character.armor_class - 1
-      character.hit?(roll).should be_false
+      character.hit?(roll, character.class).should be_false
     end
   end
 
@@ -171,6 +171,7 @@ describe 'Character' do
         character.set_ability('strength', 1)
         character.get_damage(15).should == 1
       end
+
     end
 
     describe 'dexterity_modifier' do

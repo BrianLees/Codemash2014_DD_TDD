@@ -1,1 +1,5 @@
 require_relative 'character'
+require_relative 'fighter'
+require_relative 'rogue'
+require_relative 'war_monk'
+require_relative 'paladin'
