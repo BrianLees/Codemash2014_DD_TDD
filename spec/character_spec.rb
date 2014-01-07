@@ -52,7 +52,7 @@ describe 'Character' do
     end
 
     it 'hit points default to 5' do
-      character.hit_points.should == 5
+      character.current_hit_points.should == 5
     end
   end
 
@@ -71,9 +71,9 @@ describe 'Character' do
   describe 'can be damaged' do
     it 'takes 1 point of damage when hit' do
       roll = character.armor_class
-      hit_points = defender.hit_points
-      attacker.attack(defender, roll)
-      defender.hit_points.should == hit_points - 1
+      hit_points = defender.current_hit_points
+      attacker.attack(defender, roll, 1)
+      defender.current_hit_points.should == hit_points - 1
     end
 
     it 'critical hit if roll is 20' do
@@ -83,20 +83,21 @@ describe 'Character' do
 
     it 'critical hits do double damage' do
       roll = 20
-      hit_points = defender.hit_points
-      attacker.attack(defender, roll)
-      defender.hit_points.should == hit_points - 2
+      hit_points = defender.current_hit_points
+      damage = attacker.get_damage(roll)
+      attacker.attack(defender, roll, damage)
+      defender.current_hit_points.should == hit_points - 2
     end
 
     it 'can kill a character with 0 or less hit points' do
-      [0, -1].each do |hit_points|
-        character.hit_points = hit_points
-        character.should be_dead
-      end
+      character.take_damage(character.current_hit_points)
+      character.should be_dead
+      character.take_damage(1)
+      character.should be_dead
     end
 
     it 'a character with more than 0 hit points is not dead' do
-      character.hit_points = 1
+      character.take_damage(character.current_hit_points - 1)
       character.should_not be_dead
     end
   end
@@ -145,7 +146,93 @@ describe 'Character' do
         attacker.set_ability('strength', 14)
         attacker.get_attack_roll(roll).should == 11
       end
+
+      it 'is added to the damage dealt' do
+        attacker.set_ability('strength', 16)
+        attacker.get_damage(1).should == 4
+      end
+
+      it 'damage dealt is changed based on strength' do
+        attacker.set_ability('strength', 14)
+        die_roll = 9
+        roll = attacker.get_attack_roll(die_roll)
+        damage = attacker.get_damage(1)
+        attacker.attack(defender, roll, damage)
+        defender.current_hit_points.should == 2
+      end
+
+      it 'critical hit damage uses double strength modifier' do
+        attacker.set_ability('strength', 16)
+        die_roll = 20
+        attacker.get_damage(die_roll).should == 14
+      end
+
+      it 'minimum damage is always 1 on hit' do
+        character.set_ability('strength', 1)
+        character.get_damage(15).should == 1
+      end
     end
+
+    describe 'dexterity_modifier' do
+      it 'is added to armor class' do
+        defender.set_ability('dexterity', 13)
+        defender.armor_class.should == 11
+      end
+    end
+
+    describe 'constitution modifier' do
+      it 'is added to hit points' do
+        character.set_ability('constitution', 20)
+        character.current_hit_points.should == 10
+      end
+    end
+
+    describe 'experience points gained' do
+      it 'is 10 points after a successful attack' do
+        experience_points = character.experience_points
+        character.attack(defender, 20, 2)
+        character.experience_points.should == experience_points + 10
+      end
+
+      it 'is 0 points after an unsuccessful attack' do
+        experience_points = character.experience_points
+        character.attack(defender, 1, 2)
+        character.experience_points.should == experience_points
+      end
+    end
+
+    describe 'can level' do
+      it 'starts at level 1' do
+        character.level.should == 1
+      end
+
+      it 'levels up after every 1000 experience points' do
+        character.instance_variable_set(:@experience_points, 990)
+        character.attack(defender, 19, 1)
+        character.level.should == 2
+      end
+
+      describe 'hit points increase by 5 plus constitution modifier per level' do
+        it 'constitution modifier is 0' do
+          character.send('level_up')
+          character.max_hit_points.should == 10
+        end
+      end
+
+      describe 'attack roll is increased by 1 for every even level achieved' do
+        it 'level is 2' do
+          character.send('level_up')
+          character.get_attack_roll(18).should == 19
+        end
+
+        it 'complex scenario' do
+          4.times{character.send('level_up')}
+          character.set_ability('strength', 15)
+          character.get_attack_roll(13).should == 17
+        end
+      end
+    end
+
   end
 end
 
