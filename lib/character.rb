@@ -1,6 +1,6 @@
 class Character
 
-  attr_accessor :name
+  attr_accessor :name, :attack_target
   attr_reader   :alignment, :armor_class, :current_hit_points, :strength, :dexterity, :constitution, :wisdom, :intelligence, :charisma, :experience_points, :level, :max_hit_points
 
   ALIGNMENT = %w(Good Evil Neutral)

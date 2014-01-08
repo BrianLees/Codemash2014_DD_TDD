@@ -4,26 +4,22 @@ class Paladin < Character
     (8 + get_modifier(@constitution)) * @level
   end
 
-  def attack(defender, roll, damage)
-    if defender.alignment == 'Evil'
-      damage = switch_to_evil_calculations(roll)
-      roll += 2
-    end
-
-    if defender.hit?(roll, self.class)
-      defender.take_damage(damage)
-      gain_experience
-    end
+  def get_attack_roll(roll)
+    roll = roll + get_modifier(@strength) + @level - 1
+    roll += 2 if @attack_target.alignment == 'Evil'
+    roll
   end
 
-  private
+  def get_damage(roll)
+    modifier = instance_variable_get("@#{@attack_damage_modifier}".to_sym)
+    damage = @attack_target.alignment == 'Evil' ? @base_damage + 2 : @base_damage
+    if critical_hit?(roll)
+      crit_modifier = @attack_target.alignment == 'Evil' ? 3 : 2
+      damage = (damage + (get_modifier(modifier) * 2)) * crit_modifier
+    else
+      damage += get_modifier(modifier)
+    end
 
-  def switch_to_evil_calculations(roll)
-    @crit_modifier = 3
-    @base_damage += 2
-    damage = get_damage(roll)
-    @crit_modifier = 2
-    @base_damage -= 2
-    damage
+    damage < 1 ? 1 : damage
   end
 end
