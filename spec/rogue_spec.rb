@@ -1,8 +1,12 @@
 require_relative 'spec_helper'
 
 describe 'Rogue' do
-  let(:rogue){Rogue.new}
   let(:defender){Character.new}
+  let(:rogue) do
+    r = Rogue.new
+    r.attack_target = defender
+    r
+  end
 
   it 'can create a rogue' do
     Rogue.new.should_not be_nil
@@ -29,7 +33,7 @@ describe 'Rogue' do
       defender.set_ability('dexterity', 20)
       defender_start_health = defender.current_hit_points
       damage = rogue.get_damage(roll)
-      rogue.attack(defender, roll, damage)
+      rogue.attack(roll, damage)
       defender.current_hit_points.should == defender_start_health - damage
     end
 
@@ -38,7 +42,7 @@ describe 'Rogue' do
       defender.set_ability('dexterity', 8)
       defender_start_health = defender.current_hit_points
       damage = rogue.get_damage(roll)
-      rogue.attack(defender, roll, damage)
+      rogue.attack(roll, damage)
       defender.current_hit_points.should == defender_start_health - damage
     end
 
@@ -47,7 +51,7 @@ describe 'Rogue' do
       defender.set_ability('dexterity', 11)
       defender_start_health = defender.current_hit_points
       damage = rogue.get_damage(roll)
-      rogue.attack(defender, roll, damage)
+      rogue.attack(roll, damage)
       defender.current_hit_points.should == defender_start_health - damage
     end
   end

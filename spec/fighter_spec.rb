@@ -33,4 +33,21 @@ describe 'Fighter' do
       end
     end
   end
+
+  context 'race and weapon integration' do
+    it 'Dwarf fighter with a longsword with a +3 strength modifier attacking an Orc Rogue' do
+      fighter = Fighter.new('Dwarf')
+      fighter.equip_weapon(Weapon.new(:longsword))
+      fighter.set_ability('strength', 16)
+
+      rogue = Rogue.new('Orc')
+
+      # 1 base + 2 vs orc + 3 str + 5 longsword
+      expected_life = rogue.current_hit_points - 11
+      roll = 18
+      fighter.attack_target = rogue
+      fighter.attack(fighter.get_attack_roll(roll), fighter.get_damage(roll))
+      rogue.current_hit_points.should == expected_life
+    end
+  end
 end

@@ -11,7 +11,8 @@ describe 'Character' do
 
   describe 'name' do
     it 'has a name' do
-      c = Character.new('brian')
+      c = Character.new
+      c.name = 'brian'
       c.name.should == 'brian'
     end
 
@@ -59,12 +60,12 @@ describe 'Character' do
   describe 'can attack' do
     it 'if roll beats armor class, it is a hit' do
       roll = character.armor_class
-      character.hit?(roll, character.class).should be_true
+      character.hit?(roll, character).should be_true
     end
 
     it 'if roll does not beat armor class, it is a miss' do
       roll = character.armor_class - 1
-      character.hit?(roll, character.class).should be_false
+      character.hit?(roll, character).should be_false
     end
   end
 
@@ -72,7 +73,8 @@ describe 'Character' do
     it 'takes 1 point of damage when hit' do
       roll = character.armor_class
       hit_points = defender.current_hit_points
-      attacker.attack(defender, roll, 1)
+      attacker.attack_target = defender
+      attacker.attack(roll, 1)
       defender.current_hit_points.should == hit_points - 1
     end
 
@@ -85,7 +87,8 @@ describe 'Character' do
       roll = 20
       hit_points = defender.current_hit_points
       damage = attacker.get_damage(roll)
-      attacker.attack(defender, roll, damage)
+      attacker.attack_target = defender
+      attacker.attack(roll, damage)
       defender.current_hit_points.should == hit_points - 2
     end
 
@@ -118,23 +121,24 @@ describe 'Character' do
 
     it 'values cannot be outside the range of 1 to 20' do
       [0, 21].each do |value|
-        lambda{character.set_ability('dexterity', value)}.should raise_error
+        expect{character.set_ability('dexterity', value)}.to raise_error
       end
     end
 
     it 'has correct modifiers for ability scores' do
       1.upto(20).each do |score|
-        character.get_modifier(score).should == -5  if score == 1
-        character.get_modifier(score).should == -4 if [2,3].include?(score)
-        character.get_modifier(score).should == -3 if [4,5].include?(score)
-        character.get_modifier(score).should == -2 if [6,7].include?(score)
-        character.get_modifier(score).should == -1 if [8,9].include?(score)
-        character.get_modifier(score).should == 0 if [10,11].include?(score)
-        character.get_modifier(score).should == 1 if [12,13].include?(score)
-        character.get_modifier(score).should == 2 if [14,15].include?(score)
-        character.get_modifier(score).should == 3 if [16,17].include?(score)
-        character.get_modifier(score).should == 4 if [18,19].include?(score)
-        character.get_modifier(score).should == 5 if score == 20
+        character.set_ability('strength', score)
+        character.get_modifier('strength').should == -5  if score == 1
+        character.get_modifier('strength').should == -4 if [2,3].include?(score)
+        character.get_modifier('strength').should == -3 if [4,5].include?(score)
+        character.get_modifier('strength').should == -2 if [6,7].include?(score)
+        character.get_modifier('strength').should == -1 if [8,9].include?(score)
+        character.get_modifier('strength').should == 0 if [10,11].include?(score)
+        character.get_modifier('strength').should == 1 if [12,13].include?(score)
+        character.get_modifier('strength').should == 2 if [14,15].include?(score)
+        character.get_modifier('strength').should == 3 if [16,17].include?(score)
+        character.get_modifier('strength').should == 4 if [18,19].include?(score)
+        character.get_modifier('strength').should == 5 if score == 20
       end
     end
   end
@@ -157,7 +161,8 @@ describe 'Character' do
         die_roll = 9
         roll = attacker.get_attack_roll(die_roll)
         damage = attacker.get_damage(1)
-        attacker.attack(defender, roll, damage)
+        attacker.attack_target = defender
+        attacker.attack(roll, damage)
         defender.current_hit_points.should == 2
       end
 
@@ -191,13 +196,13 @@ describe 'Character' do
     describe 'experience points gained' do
       it 'is 10 points after a successful attack' do
         experience_points = character.experience_points
-        character.attack(defender, 20, 2)
+        character.attack(20, 2)
         character.experience_points.should == experience_points + 10
       end
 
       it 'is 0 points after an unsuccessful attack' do
         experience_points = character.experience_points
-        character.attack(defender, 1, 2)
+        character.attack(1, 2)
         character.experience_points.should == experience_points
       end
     end
@@ -209,7 +214,7 @@ describe 'Character' do
 
       it 'levels up after every 1000 experience points' do
         character.instance_variable_set(:@experience_points, 990)
-        character.attack(defender, 19, 1)
+        character.attack(19, 1)
         character.level.should == 2
       end
 
